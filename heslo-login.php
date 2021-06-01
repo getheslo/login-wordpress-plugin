@@ -1,15 +1,25 @@
 <?php
 /**
  * Plugin Name: Heslo Login
- * Plugin URI:  https://developer.wordpress.org/plugins/the-basics/
+ * Plugin URI:  https://github.com/getheslo/wordpress-heslo-login
  * Description: Passwordless login for your users using Touch and Face ID
- * Version:     1.0.82
+ * Version:     1.0.0
  * Author:      Heslo
  * Author URI:  https://www.getheslo.com
  * Text Domain: heslo-login
  * License:     GPL-2.0+
  * License URI: http://www.gnu.org/licenses/gpl-2.0.txt
  */
+
+if (!defined('HESLO_LOGIN_VERSION_NUM'))     define('HESLO_LOGIN_VERSION_NUM', '1.0.0'); // Plugin version constant
+
+/**
+ * Add plugin version to database
+ *
+ * @refer https://codex.wordpress.org/Creating_Tables_with_Plugins#Adding_an_Upgrade_Function
+ * @since 0.1.0
+ */
+update_option('abl_heslo_login_version', HESLO_LOGIN_VERSION_NUM);  // Change this to add_option if a release needs to check installed version.
 
 // If this file is called directly, abort.
 if (!defined('WPINC'))
@@ -57,15 +67,9 @@ add_action('admin_enqueue_scripts', function ($hook)
         return;
     }
 
-    if (is_local_dev())
-    {
-        // DEV React dynamic loading
-        $js_to_load = 'http://localhost:3000/static/js/bundle.js';
-    }
-    else
-    {
-        $js_to_load = plugins_url('assets/app.js', __FILE__);
-    }
+   
+    $js_to_load = plugins_url('assets/app.js', __FILE__);
+    
 
     wp_enqueue_script('heslo_login_react', $js_to_load, '', time() , true);
 
@@ -133,7 +137,7 @@ function base64_urlencode($string)
 
 function heslo_login_auth($request)
 {
-	$metadata = is_local_dev() ? 'http://localhost:9000/.well-known/openid-configuration' : 'https://api.getheslo.com/.well-known/openid-configuration';
+	$metadata = is_local_dev() ? http('http://localhost:9000/.well-known/openid-configuration') : http('https://api.getheslo.com/.well-known/openid-configuration');
 
     $identifier = $_GET['identifier'];
     $client_key = get_option('heslo_login_client_key');
@@ -142,6 +146,7 @@ function heslo_login_auth($request)
     $_SESSION['heslo_login_code_verifier'] = bin2hex(random_bytes(50));
     $code_challenge = base64_urlencode(hash('sha256', $_SESSION['heslo_login_code_verifier'], true));
 
+    
     $authorize_url = $metadata->authorization_endpoint . '?' . http_build_query(['response_type' => 'code', 'client_id' => $client_key, 'redirect_uri' => $redirect_uri, 'state' => $_SESSION['heslo_login_state'], 'scope' => 'openid profile email', 'code_challenge' => $code_challenge, 'code_challenge_method' => 'S256', 'identifier' => $identifier, ]);
 
     header("Location: $authorize_url");
@@ -150,11 +155,12 @@ function heslo_login_auth($request)
 
 function heslo_login_auth_callback($request)
 {
-	$metadata = is_local_dev() ? 'http://localhost:9000/.well-known/openid-configuration' : 'https://api.getheslo.com/.well-known/openid-configuration';
+	$metadata = is_local_dev() ? http('http://localhost:9000/.well-known/openid-configuration') : http('https://api.getheslo.com/.well-known/openid-configuration');
 
     $client_key = get_option('heslo_login_client_key');
     $secret_key = get_option('heslo_login_secret_key');
     $redirect_uri = rest_url('heslo-login/v1/auth/callback');
+
     if ($_SESSION['heslo_login_state'] != $_GET['state'])
     {
         die("Authorization server returned an invalid state parameter");
@@ -182,30 +188,32 @@ function heslo_login_auth_callback($request)
 
         $user = get_user_by('email', $userinfo->email);
 
-        if ($user)
-        {
-            login_user($user->ID);
-        }
-        else
-        {
-            $random_password = wp_generate_password($length = 12, $include_standard_special_chars = false);
-            var_dump($userinfo);
-            $userdata = array(
-                'user_login' => $userinfo->email,
-                'user_email' => $userinfo->email,
-                'user_pass' => $random_password,
-                'first_name' => $userinfo->given_name,
-                'last_name' => $userinfo->family_name,
-            );
-            echo "creating a new user - $userinfo->email";
-            $user_id = wp_insert_user($userdata);
-            if (!is_wp_error($user_id))
-            {
-                echo "User created : " . $user_id;
-            }
-            login_user($user_id);
-        }
+        createUserAndLogin($user, $userinfo);
+    }
+}
 
+function createUserAndLogin($user, $userinfo) {
+    if ($user)
+    {
+        login_user($user->ID);
+    }
+    else
+    {
+        $random_password = wp_generate_password($length = 12, $include_standard_special_chars = false);
+        $userdata = array(
+            'user_login' => $userinfo->email,
+            'user_email' => $userinfo->email,
+            'user_pass' => $random_password,
+            'first_name' => $userinfo->given_name,
+            'last_name' => $userinfo->family_name,
+        );
+        echo "creating a new user - $userinfo->email";
+        $user_id = wp_insert_user($userdata);
+        if (!is_wp_error($user_id))
+        {
+            echo "User created : " . $user_id;
+        }
+        login_user($user_id);
     }
 }
 

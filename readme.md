@@ -8,11 +8,8 @@
 <!-- PROJECT LOGO -->
 <br />
 <p align="center">
-  <a href="https://getheslo.io">
-    Heslo Login
-  </a>
 
-  <h3 align="center">Heslo Login</h3>
+  <h1 align="center">Heslo Login</h1>
 
   <p align="center">
     For WordPress
@@ -23,8 +20,12 @@
     <a href=" https://github.com/getheslo/login-wordpress-plugin.git/issues">Request Feature</a>
   </p>
 </p>
-
 <!-- TABLE OF CONTENTS -->
+
+<p align="center">
+
+  <img src="img/header.png" width="600" align="center">
+  </p>
 
 ## Table of Contents
 
@@ -34,18 +35,17 @@
   - [Prerequisites](#prerequisites)
   - [WordPress Setup Guide](#wordpress-setup-guide)
   - [Building From Source](#building-from-source)
-- [Roadmap](#roadmap)
 - [License](#license)
 - [Contact](#contact)
 
 
 ## About The Project
 
-WordPress Plugin to enable a passwordless login experience using Heslo's API. The same technology that also powers the popular Heslo Pay across e-commerce platforms.
+WordPress Plugin to enable a passwordless login experience using Heslo's API. The same technology that powers the popular Heslo Pay across e-commerce platforms.
 
 This plugin will add a custom short codes `[heslo_login]`. This short code will generate a login form that will use Heslo's API to authenticate the user without a password.
 
-The user must have a FIDO2 compatible device, otherwise this form will default to a email pin verification
+The user must have a FIDO2 compatible device, otherwise user authentication default to a email pin verification
 
 This plugin can be used with WordPress' default password login, and should be compatible with any existing authentication plugins.
 
@@ -68,7 +68,7 @@ As this is a wordpress plugin this project requires wordpress to run.
 
 3. Install Heslo Login is as easy as 1-2-3
 
-      1. Create a [Heslo account](https://dashboard.getheslo.com) <a href='https://dashboard.getheslo.com' target='_blank'>Heslo account
+      1. Create a [Heslo Account](https://dashboard.getheslo.com?redirect_page=applications) - Takes 30 seconds to create one!
       2. Create a wordpress application. Use the base url specified the Wordpress plugin settings.</li>
       3. Copy and paste the generated client and secret keys into your plugin settings.
 
@@ -126,16 +126,9 @@ Project Link: [ https://github.com/getheslo/login-wordpress-plugin.git]( https:/
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
 
-[contributors-shield]: https://img.shields.io/github/contributors/loginid1/loginid-directweb.svg?style=flat-square
 [contributors-url]:  https://github.com/getheslo/login-wordpress-plugin.git/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/loginid1/loginid-directweb.svg?style=flat-square
 [forks-url]:  https://github.com/getheslo/login-wordpress-plugin.git/network/members
-[stars-shield]: https://img.shields.io/github/stars/loginid1/loginid-directweb.svg?style=flat-square
 [stars-url]:  https://github.com/getheslo/login-wordpress-plugin.git/stargazers
-[issues-shield]: https://img.shields.io/github/issues/loginid1/loginid-directweb.svg?style=flat-square
 [issues-url]:  https://github.com/getheslo/login-wordpress-plugin.git/issues
-[license-shield]: https://img.shields.io/github/license/loginid1/loginid-directweb.svg?style=flat-square
 [license-url]:  https://github.com/getheslo/login-wordpress-plugin.git/blob/master/LICENSE
-[linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=flat-square&logo=linkedin&colorB=555
-[linkedin-url]: https://linkedin.com/in/loginid
 [product-screenshot]: images/screenshot.png
