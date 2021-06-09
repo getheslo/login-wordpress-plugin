@@ -58,14 +58,13 @@ const Settings = ({ nonce, urls = {} }) => {
 
   const baseUrl = new URL(urls.callback);
 
-  console.log(autoInstallation);
   return (
     <div>
       <h1>Heslo</h1>
       <h2>Configuring Heslo Login is easy as 1-2-3</h2>
       <ol>
         <li>Create a <b><a href='https://dashboard.getheslo.com?redirect_page=applications' target='_blank'>Heslo account</a></b></li>
-        <li>Create a wordpress application. Use {baseUrl.origin} when prompted for the base url</li>
+        <li>Create a wordpress application. Use <b>{baseUrl.origin}</b> when prompted for the base url</li>
         <li>Copy and paste the generated client and secret keys below</li>
       </ol> 
       <form onSubmit={updateSettings}>

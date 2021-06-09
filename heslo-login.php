@@ -27,7 +27,7 @@ if (!defined('WPINC'))
     die;
 }
 
-function is_local_dev()
+function heslo_login_is_local_dev()
 {
     if (in_array($_SERVER['REMOTE_ADDR'], array(
         '10.255.0.2',
@@ -42,21 +42,25 @@ function is_local_dev()
 /**
  * Enqueue widget scripts.
  */
-function widget_script()
+function heslo_login_widget_script()
 {
     $client_key = get_option('heslo_login_client_key');
-    $js_to_load = is_local_dev() ? 'http://localhost:3000/login/script' : 'https://channel-api.getheslo.com/login/script';
-?>
-        <script src="<?php echo $js_to_load ?>?application_client_id=<?php echo $client_key ?>"></script>
-    <?php
+    $js_to_load = heslo_login_is_local_dev() ? 'http://localhost:3000/login/script' : 'https://channel-api.getheslo.com/login/script';
+
+    $args = array(
+        'application_client_id' => $client_key,
+    );
+    wp_enqueue_script('heslo_widget_script', esc_url(add_query_arg($args, $js_to_load)), '', time() , true);
 }
-function login_widget_script()
+
+function heslo_login_widget_login_page_script()
 {
     $auto_installation = get_option('heslo_login_auto_installation');
     return $auto_installation == 'true' ? widget_script() : '';
 }
-add_action('wp_head', 'widget_script');
-add_action('login_enqueue_scripts', 'login_widget_script');
+
+add_action('wp_head', 'heslo_login_widget_script');
+add_action('login_enqueue_scripts', 'heslo_login_widget_login_page_script');
 
 add_action('admin_enqueue_scripts', function ($hook)
 {
@@ -106,7 +110,7 @@ add_action('admin_menu', function ()
     });
 });
 
-function heslologin_footer_text($default)
+function heslo_login_footer_text($default)
 {
     // Retun default on non-plugin pages
     $screen = get_current_screen();
@@ -115,36 +119,36 @@ function heslologin_footer_text($default)
         return $default;
     }
 
-    $heslologin_footer_text = sprintf(__('Like this plugin? Please leave a <a href="%s" target="_blank">&#9733;&#9733;&#9733;&#9733;&#9733;</a> rating to support continued development. Thanks!', 'heslo-login') , 'https://wordpress.org/support/plugin/heslo/reviews/?rate=5#new-post');
+    $heslologin_footer_text = sprintf(__('Like this plugin? Please leave a <a href="%s" target="_blank">&#9733;&#9733;&#9733;&#9733;&#9733;</a> rating to support continued development. Thanks!', 'heslo-login') , 'https://wordpress.org/support/plugin/heslo-login/reviews/?rate=5#new-post');
 
     return $heslologin_footer_text;
 }
 
-function sess_start()
+function heslo_login_sess_start()
 {
     if (!session_id()) session_start();
 }
-add_action('init', 'sess_start');
+add_action('init', 'heslo_login_sess_start');
 
-add_filter('admin_footer_text', 'heslologin_footer_text');
+add_filter('admin_footer_text', 'heslo_login_footer_text');
 
 // Base64-urlencoding is a simple variation on base64-encoding
 // Instead of +/ we use -_, and the trailing = are removed.
-function base64_urlencode($string)
+function heslo_login_base64_urlencode($string)
 {
     return rtrim(strtr(base64_encode($string) , '+/', '-_') , '=');
 }
 
 function heslo_login_auth($request)
 {
-	$metadata = is_local_dev() ? http('http://localhost:9000/.well-known/openid-configuration') : http('https://api.getheslo.com/.well-known/openid-configuration');
+	$metadata = heslo_login_is_local_dev() ? heslo_login_http('http://localhost:9000/.well-known/openid-configuration') : heslo_login_http('https://api.getheslo.com/.well-known/openid-configuration');
 
-    $identifier = $_GET['identifier'];
+    $identifier = sanitize_text_field($_GET['identifier']);
     $client_key = get_option('heslo_login_client_key');
     $redirect_uri = rest_url('heslo-login/v1/auth/callback');
     $_SESSION['heslo_login_state'] = bin2hex(random_bytes(5));
     $_SESSION['heslo_login_code_verifier'] = bin2hex(random_bytes(50));
-    $code_challenge = base64_urlencode(hash('sha256', $_SESSION['heslo_login_code_verifier'], true));
+    $code_challenge = heslo_login_base64_urlencode(hash('sha256', $_SESSION['heslo_login_code_verifier'], true));
 
     
     $authorize_url = $metadata->authorization_endpoint . '?' . http_build_query(['response_type' => 'code', 'client_id' => $client_key, 'redirect_uri' => $redirect_uri, 'state' => $_SESSION['heslo_login_state'], 'scope' => 'openid profile email', 'code_challenge' => $code_challenge, 'code_challenge_method' => 'S256', 'identifier' => $identifier, ]);
@@ -155,30 +159,30 @@ function heslo_login_auth($request)
 
 function heslo_login_auth_callback($request)
 {
-	$metadata = is_local_dev() ? http('http://localhost:9000/.well-known/openid-configuration') : http('https://api.getheslo.com/.well-known/openid-configuration');
+	$metadata = heslo_login_is_local_dev() ? heslo_login_http('http://localhost:9000/.well-known/openid-configuration') : heslo_login_http('https://api.getheslo.com/.well-known/openid-configuration');
 
     $client_key = get_option('heslo_login_client_key');
     $secret_key = get_option('heslo_login_secret_key');
     $redirect_uri = rest_url('heslo-login/v1/auth/callback');
 
-    if ($_SESSION['heslo_login_state'] != $_GET['state'])
+    if ($_SESSION['heslo_login_state'] != sanitize_text_field($_GET['state']))
     {
         die("Authorization server returned an invalid state parameter");
     }
 
     if (isset($_GET['error']))
     {
-        die('Authorization server returned an error: ' . htmlspecialchars($_GET['error']));
+        die('Authorization server returned an error: ' . htmlspecialchars(sanitize_text_field($_GET['error'])));
     }
 
-    $response = http($metadata->token_endpoint, ['grant_type' => 'authorization_code', 'code' => $_GET['code'], 'redirect_uri' => $redirect_uri, 'client_id' => $client_key, 'client_secret' => $secret_key, 'code_verifier' => $_SESSION['heslo_login_code_verifier']]);
+    $response = heslo_login_http($metadata->token_endpoint, ['grant_type' => 'authorization_code', 'code' => sanitize_text_field($_GET['code']), 'redirect_uri' => $redirect_uri, 'client_id' => $client_key, 'client_secret' => $secret_key, 'code_verifier' => $_SESSION['heslo_login_code_verifier']]);
 
     if (!isset($response->access_token))
     {
         die('Error fetching access token');
     }
 
-    $userinfo = http($metadata->userinfo_endpoint, ['access_token' => $response->access_token, ]);
+    $userinfo = heslo_login_http($metadata->userinfo_endpoint, ['access_token' => $response->access_token, ]);
 
     if ($userinfo->sub)
     {
@@ -195,7 +199,7 @@ function heslo_login_auth_callback($request)
 function createUserAndLogin($user, $userinfo) {
     if ($user)
     {
-        login_user($user->ID);
+        heslo_login_authenticate_user($user->ID);
     }
     else
     {
@@ -207,13 +211,11 @@ function createUserAndLogin($user, $userinfo) {
             'first_name' => $userinfo->given_name,
             'last_name' => $userinfo->family_name,
         );
-        echo "creating a new user - $userinfo->email";
         $user_id = wp_insert_user($userdata);
         if (!is_wp_error($user_id))
         {
-            echo "User created : " . $user_id;
+            heslo_login_authenticate_user($user_id);
         }
-        login_user($user_id);
     }
 }
 
@@ -282,7 +284,7 @@ add_action('rest_api_init', function ()
     ));
 });
 
-function login_shortcode()
+function heslo_login_shortcode()
 {
 
     $client_key = get_option('heslo_login_client_key');
@@ -294,9 +296,9 @@ function login_shortcode()
     return $message;
 }
 // register shortcode
-add_shortcode('heslo_login', 'login_shortcode');
+add_shortcode('heslo_login', 'heslo_login_shortcode');
 
-function http($url, $params = false)
+function heslo_login_http($url, $params = false)
 {
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -304,7 +306,7 @@ function http($url, $params = false)
     return json_decode(curl_exec($ch));
 }
 
-function login_user($user_id)
+function heslo_login_authenticate_user($user_id)
 {
     wp_set_current_user($user_id);
     wp_set_auth_cookie($user_id);
@@ -312,9 +314,9 @@ function login_user($user_id)
     $message = new stdClass();
     $message->type = "redirect";
     $message->url = home_url();
-    $message->user_id = $user_id;
+    $message->user_id = esc_attr($user_id);
 
-    $result_message = json_encode($message);
+    $result_message = wp_json_encode($message);
 
     header("Content-Type:text/html");
 
@@ -322,5 +324,4 @@ function login_user($user_id)
     echo "<html><body><script>window.opener.postMessage($result_message, '*');window.close();</script></body></html>";
     ob_flush();
     ob_end_clean();
-
 }

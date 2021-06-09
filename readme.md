@@ -2,6 +2,7 @@
 <br />
 <p align="center">
 
+
   <h1 align="center">Heslo Login</h1>
 
   <p align="center">
@@ -34,13 +35,14 @@
 
 ## About The Project
 
-WordPress Plugin to enable a passwordless login experience using Heslo's API. The same technology that powers the popular Heslo Pay across e-commerce platforms.
+WordPress Plugin to enable a passwordless login experience using Heslo's API. The same technology that powers the popular [Heslo Pay](https://getheslo.com) across e-commerce platforms.
+
+Eliminate the need for users to enter a password when they log in to their website. Heslo Login enables a passwordless login experience using biometrics such as Touch or Face ID. If a device does not support a FIDO authenticator then the user will simple peform an email pin verification
 
 This plugin will add a custom short codes `[heslo_login]`. This short code will generate a login form that will use Heslo's API to authenticate the user without a password.
 
-The user must have a FIDO2 compatible device, otherwise user authentication default to a email pin verification
+The user must have a FIDO2 compatible device, otherwise user authentication default to a email pin verification.
 
-This plugin can be used with WordPress' default password login, and should be compatible with any existing authentication plugins.
 
 <!-- GETTING STARTED -->
 
@@ -113,15 +115,4 @@ Heslo Support - support@getheslo.com
 
 If you need plugin help feel free to contact chris@getheslo.com (usually reply within 24 hours).
 
-Project Link: [ https://github.com/getheslo/login-wordpress-plugin.git]( https://github.com/getheslo/login-wordpress-plugin.git)
-
-
-<!-- MARKDOWN LINKS & IMAGES -->
-<!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-
-[contributors-url]:  https://github.com/getheslo/login-wordpress-plugin.git/graphs/contributors
-[forks-url]:  https://github.com/getheslo/login-wordpress-plugin.git/network/members
-[stars-url]:  https://github.com/getheslo/login-wordpress-plugin.git/stargazers
-[issues-url]:  https://github.com/getheslo/login-wordpress-plugin.git/issues
-[license-url]:  https://github.com/getheslo/login-wordpress-plugin.git/blob/master/LICENSE
-[product-screenshot]: images/screenshot.png
+Project Link: [https://github.com/getheslo/login-wordpress-plugin.git]( https://github.com/getheslo/login-wordpress-plugin.git)
